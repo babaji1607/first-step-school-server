@@ -1,0 +1,66 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.venv/
+env/
+ENV/
+env.bak/
+
+# VS Code settings
+.vscode/
+
+# Environment variables
+*.env
+.env.*
+
+# SQLite database (if used)
+*.sqlite3
+*.db
+
+# Test coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# Pytest
+.pytest_cache/
+
+# Mypy
+.mypy_cache/
+.dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# PyCharm
+.idea/
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# Jupyter Notebooks (if used)
+.ipynb_checkpoints/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Pydantic settings
+__pydantic_schema_cache__/
+
+# Others
+*.bak
+*.swp
