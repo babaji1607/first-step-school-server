@@ -2,9 +2,8 @@
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
-from models import APIInfo
-from database import db
-from routers import students, teachers, admin
+from database import create_db_and_tables, get_session, SessionDep
+from routers import students, teachers
 
 app = FastAPI(
     title="Student Attendance API", 
@@ -21,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/", response_model=APIInfo, tags=["Root"])
+@app.get("/", tags=["Root"])
 async def root():
     """Get basic API information and available endpoints"""
     return {
@@ -31,7 +30,6 @@ async def root():
         "endpoints": [
             "/students - Student management",
             "/teachers - Teacher dashboard and functions",
-            "/admin - Administrative functions",
             "/docs - Interactive API documentation",
             "/redoc - Alternative documentation"
         ]
@@ -63,30 +61,13 @@ async def get_api_info(request: Request):
 # Include all routers
 app.include_router(students.router)
 app.include_router(teachers.router)
-app.include_router(admin.router)
 
 # Add sample data for testing
 @app.on_event("startup")
-async def startup_event():
-    try:
-        sample_students = [
-            {"student_id": "S001", "name": "Samurai Kira"},
-            {"student_id": "S0018", "name": "John Doe"},
-            {"student_id": "S002", "name": "Jane Smith"},
-            {"student_id": "S003", "name": "Bob Johnson"},
-            {"student_id": "S004", "name": "Alice Williams"},
-            {"student_id": "S005", "name": "Charlie Brown"}
-        ]
-        
-        for student in sample_students:
-            if not db.add_student(student["student_id"], student["name"]):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Failed to add student {student['student_id']}"
-                )
-    except Exception as e:
-        print(f"Error during startup: {str(e)}")
-        raise
+def on_startup():
+    create_db_and_tables()
+    # Sample data can be added here if needed
+    
 
 if __name__ == "__main__":
     import uvicorn

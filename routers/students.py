@@ -1,50 +1,54 @@
 # routers/students.py
-from fastapi import APIRouter, HTTPException, status
-from database import db
-from models import Student, StudentInDB, AttendanceUpdate, AttendanceResponse
+from fastapi import APIRouter, HTTPException, status, Query
+from models.students import Student
+from database import SessionDep
+from typing import Annotated
+from sqlmodel import select
 
 router = APIRouter(
     prefix="/students",
     tags=["students"]
 )
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=Student)
-async def create_student(student: Student):
-    success = db.add_student(student.student_id, student.name)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Student with ID {student.student_id} already exists"
-        )
+# @router.post("/", status_code=status.HTTP_201_CREATED, response_model=Student)
+# async def create_student(student: Student):
+   
+#     return student
+
+
+
+@router.post("/create/", status_code=status.HTTP_201_CREATED, response_model=Student)
+def create_hero(student: Student, session: SessionDep) -> Student:
+    session.add(student)
+    session.commit()
+    session.refresh(student)
     return student
 
-@router.get("/", response_model=list[StudentInDB])
-async def get_all_students():
-    return db.get_all_students()
 
-@router.get("/{student_id}", response_model=StudentInDB)
-async def get_student(student_id: str):
-    student = db.get_student(student_id)
-    if student is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Student with ID {student_id} not found"
-        )
-    return student
+@router.get("/showall/")
+def read_students(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> list[Student]:
+    heroes = session.exec(select(Student).offset(offset).limit(limit)).all()
+    return heroes
 
-@router.post("/attendance/mark-absences", response_model=AttendanceResponse)
-async def mark_absences(attendance: AttendanceUpdate):
-    if len(db.students) == 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No students registered in the system"
-        )
-    return db.mark_absences(attendance.date, attendance.absent_students)
 
-@router.get("/attendance/{date}", response_model=AttendanceResponse)
-async def get_attendance(date: str):
-    return db.get_attendance(date)
+@router.get("/student/{student_id}/", response_model=Student)
+def read_student(student_id: int, session: SessionDep) -> Student:
+    stud = session.get(Student, student_id)
+    if not stud:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return stud
 
-@router.get("/attendance/report/monthly/{year}/{month}", response_model=dict)
-async def monthly_attendance_report(year: int, month: int):
-    return db.get_monthly_report(year, month)
+
+
+@router.delete("/student/{student_id}")
+def delete_student(student_id: int, session: SessionDep):
+    stud = session.get(Student, student_id)
+    if not stud:
+        raise HTTPException(status_code=404, detail="Student not found")
+    session.delete(stud)
+    session.commit()
+    return {"ok": True, "deleted_student_id": student_id}

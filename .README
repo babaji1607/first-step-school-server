@@ -1,0 +1,47 @@
+# FastAPI Beginner Project 🚀
+
+This is a beginner-level FastAPI project following a clean and scalable folder structure. The goal is to help new developers organize their FastAPI applications in a modular way, so they can scale easily as the app grows.
+
+---
+
+## 📁 Folder Structure
+
+project/ ├── app/ # Main application package │ ├── main.py # Entry point for the FastAPI app │ ├── routers/ # Contains all the route definitions (API endpoints) │ │ ├── init.py │ │ └── user.py # Example router module │ ├── models/ # SQLAlchemy database models │ │ ├── init.py │ │ └── user.py │ ├── schemas/ # Pydantic models (request/response validation) │ │ ├── init.py │ │ └── user.py │ ├── crud/ # Database interaction logic │ │ ├── init.py │ │ └── user.py │ └── database.py # DB connection and session management │ ├── .env # Environment variables (e.g., DB credentials) ├── requirements.txt # Python dependencies └── README.md # Project overview and documentation
+
+
+---
+
+## 🗂️ Explanation of Folders & Files
+
+### `app/main.py`
+The main entry point for your FastAPI app. It includes app initialization and router inclusion.
+
+### `app/routers/`
+This folder contains all route files. You can group routes by feature (e.g., `user.py`, `auth.py`, `post.py`).
+
+### `app/models/`
+Houses all SQLAlchemy database models. Models represent database tables.
+
+### `app/schemas/`
+Contains Pydantic models for request validation and response formatting. These are used in routes and CRUD operations.
+
+### `app/crud/`
+Includes functions that interact with the database (create, read, update, delete). Keeps business logic separate from routes.
+
+### `app/database.py`
+Handles database connection setup and session management using SQLAlchemy.
+
+### `.env`
+Used to store sensitive configuration like database URL, secret keys, etc. (Don't forget to add `.env` to your `.gitignore`!)
+
+### `requirements.txt`
+Lists all dependencies required to run your project (e.g., FastAPI, SQLAlchemy, Uvicorn).
+
+---
+
+## ✅ Getting Started
+
+1. **Create a virtual environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
