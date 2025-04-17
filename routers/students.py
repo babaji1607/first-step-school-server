@@ -1,8 +1,8 @@
 # routers/students.py
 from fastapi import APIRouter, HTTPException, status, Query
-from models.students import Student, StudentCreate
+from models.students import Student, StudentCreate, StudentRead
 from database import SessionDep
-from typing import Annotated
+from typing import Annotated, List
 from sqlmodel import select
 from uuid import UUID
 
@@ -75,7 +75,7 @@ def create_student(student: StudentCreate, session: SessionDep) -> Student:
         select(Student).where(
             Student.name == student.name,
             Student.age == student.age,
-            Student.Class == student.Class,
+            Student.class_name == student.class_name,
             Student.contact == student.contact,
         )
     ).first()
@@ -94,7 +94,7 @@ def create_student(student: StudentCreate, session: SessionDep) -> Student:
 
 
 
-@router.get("/showall/", response_model=list[Student])
+@router.get("/showall/", response_model=list[StudentRead])
 def read_students(
     session: SessionDep,
     offset: int = 0,
@@ -104,8 +104,8 @@ def read_students(
     return students
 
 
-@router.get("/student/{student_id}/", response_model=Student)
-def read_student(student_id: int, session: SessionDep) -> Student:
+@router.get("/student/{student_id}/", response_model=StudentRead)
+def read_student(student_id: UUID, session: SessionDep) -> Student:
     stud = session.get(Student, student_id)
     if not stud:
         raise HTTPException(
@@ -117,7 +117,7 @@ def read_student(student_id: int, session: SessionDep) -> Student:
 
 
 @router.delete("/student/{student_id}")
-def delete_student(student_id: int, session: SessionDep):
+def delete_student(student_id: UUID, session: SessionDep):
     stud = session.get(Student, student_id)
     if not stud:
         raise HTTPException(status_code=404, detail="Student not found")

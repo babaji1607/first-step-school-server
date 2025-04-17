@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Query
 from database import SessionDep
 from typing import Annotated
 from sqlmodel import select
-from models.parents import Parent, ParentCreate
+from models.parents import Parent, ParentCreate, ParentRead
 
 
 router = APIRouter(
@@ -18,8 +18,8 @@ def create_hero(parent: ParentCreate, session: SessionDep) -> Parent:
     session.refresh(db_parent)
     return db_parent
 
-@router.get("/show_all", response_model=list[Parent], status_code=status.HTTP_200_OK)
+@router.get("/show_all", response_model=list[ParentRead], status_code=status.HTTP_200_OK)
 def get_all_parents(session: SessionDep) -> list[Parent]:
     statement = select(Parent)
-    results = session.exec(statement)
-    return results.all()
+    parents = session.exec(statement).all()
+    return parents

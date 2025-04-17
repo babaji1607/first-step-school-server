@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship
 from uuid import uuid4, UUID
+from  typing import List
 
 
  # SQlMOdel serves as both basemodel and a table model    ]
@@ -16,5 +17,26 @@ class ParentCreate(SQLModel):
 class Parent(ParentCreate, table=True):
     __tablename__ = "parents"
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    students: list['Student'] = Relationship(back_populates="parent") # this name will be name of field not the name of table
+    students: list['Student'] = Relationship(back_populates="parent",  sa_relationship_kwargs={"cascade": "all, delete"}) # this name will be name of field not the name of table
+
+
+
+class StudentSchmeaParent(SQLModel): # it should be here instead of models/students.py 
+    name: str = Field(index=True)
+    age: int | None = Field(default=None, index=True)
+    class_name : str | None = Field(default=None)
+    contact: str | None = Field(default=None)
+    address: str | None = Field(default=None)
+
+class ParentRead(SQLModel): # additional model to show students array in the responseJ
+    id: UUID
+    FatherName: str
+    MotherName: str
+    PhoneNumber: str | None
+    Address: str | None
+    Occupation: str | None
+    Email: str | None
+    students: list[StudentSchmeaParent] | None  # this needs to be mentioned specifically
     
+
+# this fucking circular Imports problem
