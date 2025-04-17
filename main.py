@@ -3,12 +3,15 @@ from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from database import create_db_and_tables, get_session, SessionDep
-from routers import students, teachers
+from routers import students, teachers, parents
 
 app = FastAPI(
     title="Student Attendance API", 
     description="API for tracking student absences",
-    version="1.0.0"
+    version="1.0.0",
+     swagger_ui_parameters={
+        "syntaxHighlight.theme": "monokai"
+    }
 )
 
 # Add CORS middleware
@@ -61,6 +64,7 @@ async def get_api_info(request: Request):
 # Include all routers
 app.include_router(students.router)
 app.include_router(teachers.router)
+app.include_router(parents.router)
 
 # Add sample data for testing
 @app.on_event("startup")
