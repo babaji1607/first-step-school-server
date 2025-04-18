@@ -1,6 +1,8 @@
 from sqlmodel import SQLModel, Field, Relationship
 from uuid import uuid4, UUID
 from  typing import List
+from typing import Optional
+from sqlmodel import SQLModel
 
 
  # SQlMOdel serves as both basemodel and a table model    ]
@@ -40,3 +42,11 @@ class ParentRead(SQLModel): # additional model to show students array in the res
     
 
 # this fucking circular Imports problem
+
+class ParentUpdate(SQLModel):
+    FatherName: Optional[str] = None
+    MotherName: Optional[str] = None
+    PhoneNumber: Optional[str] = None
+    Address: Optional[str] = None
+    Occupation: Optional[str] = None
+    Email: Optional[str] = None

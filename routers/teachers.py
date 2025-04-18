@@ -1,6 +1,6 @@
 # routers/students.py
 from fastapi import APIRouter, HTTPException, status, Query
-from models.teachers import Teacher
+from models.teachers import Teacher, TeacherRead, TeacherCreate
 from database import SessionDep
 from typing import Annotated
 from sqlmodel import select
@@ -14,11 +14,13 @@ router = APIRouter(
 
 
 @router.post("/create/", status_code=status.HTTP_201_CREATED, response_model=Teacher)
-def create_hero(teacher: Teacher, session: SessionDep) -> Teacher:
-    session.add(teacher)
+def create_hero(teacher: TeacherCreate, session: SessionDep) -> Teacher:
+    db_teacher = Teacher(**teacher.dict())  # ✅ convert to table-mapped model
+    session.add(db_teacher)
     session.commit()
-    session.refresh(teacher)
-    return teacher
+    session.refresh(db_teacher)
+    return db_teacher
+
 
 
 @router.get("/showall/")
@@ -26,7 +28,7 @@ def read_students(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> list[Teacher]:
+) -> list[TeacherRead]:
     heroes = session.exec(select(Teacher).offset(offset).limit(limit)).all()
     return heroes
 

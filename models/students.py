@@ -1,6 +1,7 @@
 from sqlmodel import Field, SQLModel, Relationship
 from uuid import uuid4, UUID
 from models.parents import Parent,ParentRead,ParentCreate
+from models.teachers import TeacherCreate, Teacher
 
 
 
@@ -14,11 +15,13 @@ class StudentCreate(SQLModel):
     contact: str | None = Field(default=None)
     address: str | None = Field(default=None)
     parent_id: UUID | None = Field(default=None, foreign_key="parents.id")
+    class_teacher_id: UUID | None = Field(default=None, foreign_key="teachers.id")
 
 class Student(StudentCreate, table=True):
     __tablename__ = "students"
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)    
     parent:Parent  = Relationship(back_populates="students")
+    class_teacher:Teacher = Relationship(back_populates="students")
     
     
 class StudentRead(SQLModel):  # I need to create this model so that I can show parents array
@@ -30,6 +33,7 @@ class StudentRead(SQLModel):  # I need to create this model so that I can show p
     address: str | None
     parent_id: UUID | None
     parent: ParentCreate | None    # this needs to be mentioned specifically
+    class_teacher: TeacherCreate| None
 
 
 
