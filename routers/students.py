@@ -1,10 +1,11 @@
 # routers/students.py
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Depends
 from models.students import Student, StudentCreate, StudentRead
 from database import SessionDep
 from typing import Annotated, List
 from sqlmodel import select
 from uuid import UUID
+from Utilities.auth import require_min_role
 
 
 router = APIRouter(
@@ -99,6 +100,7 @@ def read_students(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
+    user = Depends(require_min_role("admin"))
 ) -> list[Student]:
     students = session.exec(select(Student).offset(offset).limit(limit)).all()
     return students

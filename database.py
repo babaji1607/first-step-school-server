@@ -1,9 +1,11 @@
 from sqlmodel import create_engine, SQLModel, Session
 from fastapi import Depends, FastAPI, HTTPException, Query
 from typing import Annotated
+from Utilities.settings import settings
 
 
-
+# make sure to set the database URL in your .env file
+# DATABASE_URL=sqlite:///./database.db
 
 sqlite_file_name = "database.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"

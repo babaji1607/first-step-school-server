@@ -64,3 +64,6 @@ __pydantic_schema_cache__/
 # Others
 *.bak
 *.swp
+
+#scripts
+script.py
