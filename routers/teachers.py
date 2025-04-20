@@ -1,13 +1,15 @@
 # routers/students.py
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Depends
 from models.teachers import Teacher, TeacherRead, TeacherCreate
 from database import SessionDep
 from typing import Annotated
 from sqlmodel import select
+from Utilities.auth import require_min_role
 
 router = APIRouter(
     prefix="/teachers",
-    tags=["teachers"]
+    tags=["teachers"],
+    dependencies=[Depends(require_min_role("admin"))],
 )
 
 

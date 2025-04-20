@@ -3,13 +3,15 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 from typing import List, Optional
 from uuid import UUID
+from Utilities.auth import require_min_role
 
 from models.notifications import Notification, NotificationCreate, NotificationRead, RecipientType
 from database import SessionDep
 
 router = APIRouter(
     prefix="/notifications", 
-    tags=["Notifications"]
+    tags=["Notifications"],
+    dependencies=[Depends(require_min_role("student"))],
 )
 
 @router.post("/", response_model=NotificationRead)

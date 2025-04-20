@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from database import create_db_and_tables, get_session, SessionDep
-from routers import students, teachers, parents, notifications
+from routers import students, teachers, parents, notifications, events
 
 app = FastAPI(
     title="Student Attendance API", 
@@ -66,6 +66,7 @@ app.include_router(students.router)
 app.include_router(teachers.router)
 app.include_router(parents.router)
 app.include_router(notifications.router)
+app.include_router(events.router)
 
 # Add sample data for testing
 @app.on_event("startup")

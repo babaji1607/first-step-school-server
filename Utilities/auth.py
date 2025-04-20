@@ -3,7 +3,11 @@ from jose import jwt, jwk
 from jose.utils import base64url_decode
 import requests
 from Utilities.settings import settings
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
+
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+bearer_scheme = HTTPBearer()
 
 CLERK_ISSUER = settings.CLERK_ISSUER
 CLERK_JWKS_URL = settings.CLERK_JWKS_URL
@@ -60,11 +64,10 @@ def verify_token(token: str):
         raise HTTPException(status_code=401, detail=f"Token verification failed: {str(e)}")
 
 
-async def get_current_user(request: Request):
-    auth = request.headers.get("Authorization")
-    if not auth or not auth.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing token")
-    token = auth.split(" ")[1]
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)
+):
+    token = credentials.credentials
     return verify_token(token)
 
 

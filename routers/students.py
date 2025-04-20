@@ -10,7 +10,8 @@ from Utilities.auth import require_min_role
 
 router = APIRouter(
     prefix="/students",
-    tags=["students"]
+    tags=["students"],
+    dependencies=[Depends(require_min_role("teacher"))],
 )
 
 # @router.post("/", status_code=status.HTTP_201_CREATED, response_model=Student)

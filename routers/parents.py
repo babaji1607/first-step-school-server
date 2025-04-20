@@ -1,14 +1,15 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from database import SessionDep
 from typing import List
 from sqlmodel import select
 from uuid import UUID
-
 from models.parents import Parent, ParentCreate, ParentRead, ParentUpdate
+from Utilities.auth import require_min_role
 
 router = APIRouter(
     prefix="/parents",
-    tags=["parents"]
+    tags=["parents"],
+    dependencies=[Depends(require_min_role("admin"))],
 )
 
 # CREATE
