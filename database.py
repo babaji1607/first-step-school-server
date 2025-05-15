@@ -1,7 +1,7 @@
 from sqlmodel import create_engine, SQLModel, Session
 from fastapi import Depends, FastAPI, HTTPException, Query
 from typing import Annotated
-from Utilities.settings import settings
+# from Utilities.settings import settings
 
 
 # make sure to set the database URL in your .env file
