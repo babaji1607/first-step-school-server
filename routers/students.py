@@ -129,8 +129,9 @@ def delete_student(student_id: UUID, session: SessionDep):
     return {"ok": True, "deleted_student_id": student_id}
 
 
-@router.patch("/student/{student_id}/", response_model=Student)
-def patch_student(
+# be carefule with trailing slashes in frontend
+@router.put("/student/{student_id}/", response_model=Student)
+def update_student(
     student_id: UUID,
     updated_data: StudentCreate,
     session: SessionDep
@@ -143,9 +144,9 @@ def patch_student(
             detail=f"Student with ID {student_id} not found"
         )
 
-    # Apply partial updates
-    update_fields = updated_data.dict(exclude_unset=True)
-    for field, value in update_fields.items():
+    # Apply full update
+    updated_fields = updated_data.dict()
+    for field, value in updated_fields.items():
         setattr(student, field, value)
 
     session.add(student)

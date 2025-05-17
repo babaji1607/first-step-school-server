@@ -66,6 +66,32 @@ from datetime import date
 from models.students import Student  # assuming Student model has `class_name`
 from sqlmodel import or_
 
+@router.get("/sessions/", response_model=List[AttendanceSessionRead])
+def get_attendance_sessions(
+    session: SessionDep,
+    class_name: str | None = Query(None, description="Class name to filter sessions"),
+    date: date | None = Query(None, description="Date to filter sessions"),
+    teacher_id: UUID | None = Query(None, description="Teacher ID to filter sessions"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100)
+):
+    offset = (page - 1) * limit
+    query = select(AttendanceSession)
+
+    # Apply filters only if provided
+    if class_name:
+        query = query.where(AttendanceSession.class_name == class_name)
+    if date:
+        query = query.where(AttendanceSession.date == date)
+    if teacher_id:
+        query = query.where(AttendanceSession.teacher_id == teacher_id)
+
+    # Apply pagination
+    query = query.offset(offset).limit(limit)
+
+    sessions = session.exec(query).all()
+    return sessions
+
 @router.get("/records/filter/", response_model=List[AttendanceRecordRead])
 def get_filtered_attendance_records(
     session: SessionDep,

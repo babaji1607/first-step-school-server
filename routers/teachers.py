@@ -5,6 +5,7 @@ from database import SessionDep
 from typing import Annotated
 from sqlmodel import select
 from Utilities.auth import require_min_role
+from uuid import UUID
 
 router = APIRouter(
     prefix="/teachers",
@@ -45,7 +46,7 @@ def read_student(teacher_id: int, session: SessionDep) -> Teacher:
 
 
 @router.delete("/teacher/{teacher_id}")
-def delete_student(teacher_id: int, session: SessionDep):
+def delete_student(teacher_id: UUID, session: SessionDep):
     stud = session.get(Teacher, teacher_id)
     if not stud:
         raise HTTPException(status_code=404, detail="Teacher not found")
@@ -54,13 +55,26 @@ def delete_student(teacher_id: int, session: SessionDep):
     return {"ok": True, "deleted_student_id": teacher_id}
 
 
-@router.put("/teacher/{teacher_id}", response_model=Teacher)
-def update_student(teacher_id: int, teacher: Teacher, session: SessionDep):
-    stud = session.get(Teacher, teacher_id)
-    if not stud:
-        raise HTTPException(status_code=404, detail="Teacher not found")
-    teacher.id = teacher_id
+@router.put("/teacher/{teacher_id}/", response_model=Teacher)
+def put_teacher(
+    teacher_id: UUID,
+    updated_data: TeacherCreate,  # Assuming this has all required fields for full replacement
+    session: SessionDep
+) -> Teacher:
+    teacher = session.get(Teacher, teacher_id)
+
+    if not teacher:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Teacher with ID {teacher_id} not found"
+        )
+
+    # Full update: replace all fields with new data
+    for field, value in updated_data.dict().items():
+        setattr(teacher, field, value)
+
     session.add(teacher)
     session.commit()
     session.refresh(teacher)
+
     return teacher
