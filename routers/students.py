@@ -71,24 +71,25 @@ def search_students(
 
 
 @router.post("/create/", status_code=status.HTTP_201_CREATED, response_model=Student)
-def create_student(student: StudentCreate, session: SessionDep) -> Student:
-    # Check for existing student based on name, age, class, etc.
-    existing_student = session.exec(
-        select(Student).where(
-            Student.name == student.name,
-            Student.age == student.age,
-            Student.class_name == student.class_name,
-            Student.contact == student.contact,
-        )
-    ).first()
+def create_student(student_data: StudentCreate, session: SessionDep) -> Student:
+    # Check for existing student with same unique identity details
+    stmt = select(Student).where(
+        Student.name == student_data.name,
+        Student.age == student_data.age,
+        Student.contact == student_data.contact,
+        Student.class_id == student_data.class_id,
+        Student.parent_id == student_data.parent_id,
+    )
+    existing_student = session.exec(stmt).first()
 
     if existing_student:
         raise HTTPException(
-            status_code=409,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Student with the same details already exists"
         )
 
-    new_student = Student(**student.dict())
+    # Create and persist the new student
+    new_student = Student.model_validate(student_data)
     session.add(new_student)
     session.commit()
     session.refresh(new_student)

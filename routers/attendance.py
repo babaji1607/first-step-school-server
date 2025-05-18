@@ -79,8 +79,8 @@ def get_attendance_sessions(
     query = select(AttendanceSession)
 
     # Apply filters only if provided
-    if class_name:
-        query = query.where(AttendanceSession.class_name == class_name)
+    # if class_name:
+    #     query = query.where(AttendanceSession.class_name == class_name)
     if date:
         query = query.where(AttendanceSession.date == date)
     if teacher_id:
