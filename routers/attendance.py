@@ -37,7 +37,8 @@ def create_attendance_session(session_data: AttendanceSessionCreate, session: Se
         new_record = AttendanceRecord(
             student_id=record.student_id,
             status=record.status,
-            session_id=new_session.id
+            session_id=new_session.id,
+            student_name=record.student_name
         )
         session.add(new_record)
 

@@ -7,6 +7,7 @@ from datetime import date
 class AttendanceRecordBase(SQLModel):
     student_id: UUID
     status: str  # "present", "absent", etc.
+    student_name: str|None = None
 
 
 class AttendanceRecord(AttendanceRecordBase, table=True):
@@ -47,3 +48,4 @@ class AttendanceSessionRead(AttendanceSessionBase):
 class AttendanceRecordUpdate(SQLModel):
     student_id: UUID
     status: str  # "present", "absent", etc.
+    student_name: str | None = None

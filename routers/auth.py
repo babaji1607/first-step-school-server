@@ -38,11 +38,11 @@ def login(data: LoginRequest, session: Session = Depends(get_session)):
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = create_access_token({"sub": str(user.id), "role": user.role})
-    return {"access_token": token, "token_type": "bearer", "role": user.role, "student_profile": user.student_profile, "teacher_profile": user.teacher_profile}
+    return {"access_token": token, "token_type": "bearer", "role": user.role, "student_profile": user.student_profile, "teacher_profile": user.teacher_profile, "id": str(user.id)}
 
 @router.get("/me")
 def read_profile(user: User = Depends(get_current_user)):
-    return {"email": user.email, "role": user.role}
+    return {"email": user.email, "role": user.role, "student_profile": user.student_profile, "teacher_profile": user.teacher_profile}
 
 @router.get("/admin-area")
 def admin_area(user: User = Depends(require_min_role("admin"))):

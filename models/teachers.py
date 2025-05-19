@@ -12,6 +12,10 @@ class StudentForTeacher(SQLModel):
     contact: str | None = Field(default=None)
     address: str | None = Field(default=None)
     
+class ClassForTeacher(SQLModel):
+    id: UUID
+    name: str = Field(index=True)
+    
 
 class TeacherCreate(SQLModel):
     name: str = Field(index=True)
@@ -35,4 +39,5 @@ class TeacherRead(SQLModel):  # I need to create this model so that I can show p
     subject: str | None
     # assignedClass: str | None
     address: str | None  
+    classroom: Optional[ClassForTeacher] = None
     # students: list[StudentForTeacher] | None  # this needs to be mentioned specifically

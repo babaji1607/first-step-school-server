@@ -118,3 +118,18 @@ def delete_classroom(classroom_id: UUID, session: SessionDep):
     session.delete(classroom)
     session.commit()
     return {"ok": True, "deleted_classroom_id": classroom_id}
+
+
+@router.get("/by-teacher/{teacher_id}", response_model=List[ClassroomRead])
+def get_classrooms_by_teacher(teacher_id: UUID, session: SessionDep) -> List[Classroom]:
+    classrooms = session.exec(
+        select(Classroom).where(Classroom.teacher_id == teacher_id)
+    ).all()
+
+    if not classrooms:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No classrooms found for teacher with ID {teacher_id}"
+        )
+
+    return classrooms
