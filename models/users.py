@@ -10,3 +10,8 @@ class User(SQLModel, table=True):
     role: str # default role
     student_profile: Optional["Student"] = Relationship(back_populates="user")
     teacher_profile: Optional["Teacher"] | None = Relationship(back_populates="user")
+    
+
+class AdminPasswordResetRequest(SQLModel):
+    user_email: str
+    new_password: str

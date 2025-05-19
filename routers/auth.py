@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlmodel import Session, select
 from database import get_session  # your db session
-from models.users import User
+from models.users import User, AdminPasswordResetRequest
 from Utilities.security import hash_password, verify_password
 from Utilities.token import create_access_token
 from pydantic import BaseModel
@@ -58,3 +58,20 @@ def get_all_users(
     offset = (page - 1) * limit
     users = session.exec(select(User).offset(offset).limit(limit)).all()
     return users
+
+
+@router.post("/admin/reset-password")
+def admin_reset_password(
+    data: AdminPasswordResetRequest,
+    session: Session = Depends(get_session),
+    _: User = Depends(require_min_role("admin")),
+):
+    user = session.exec(select(User).where(User.email == data.user_email)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.hashed_password = hash_password(data.new_password)
+    session.add(user)
+    session.commit()
+    
+    return {"message": f"Password for {user.email} has been reset successfully"}
