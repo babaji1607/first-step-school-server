@@ -78,7 +78,6 @@ def create_student(student_data: StudentCreate, session: SessionDep) -> Student:
         Student.age == student_data.age,
         Student.contact == student_data.contact,
         Student.class_id == student_data.class_id,
-        Student.parent_id == student_data.parent_id,
     )
     existing_student = session.exec(stmt).first()
 

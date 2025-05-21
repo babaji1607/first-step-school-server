@@ -1,6 +1,5 @@
 from sqlmodel import Field, SQLModel, Relationship
 from uuid import uuid4, UUID
-from models.parents import Parent,ParentRead,ParentCreate
 from models.teachers import TeacherCreate, Teacher
 from models.classroom import Classroom
 from models.users import User
@@ -20,14 +19,16 @@ class StudentCreate(SQLModel):
     age: int | None = Field(default=None, index=True)
     contact: str | None = Field(default=None)
     address: str | None = Field(default=None)
-    parent_id: UUID | None = Field(default=None, foreign_key="parents.id")
+    FatherName: str | None = Field(default=None)
+    MotherName: str | None = Field(default=None)
+    FatherContact: str | None = Field(default=None)
+    MotherContact: str | None = Field(default=None)
     class_id: UUID | None = Field(default=None, foreign_key="classrooms.id")
     user_id: UUID | None = Field(default=None, foreign_key="users.id", unique=True)
 
 class Student(StudentCreate, table=True):
     __tablename__ = "students"
     id: UUID | None = Field(default_factory=uuid4, primary_key=True)    
-    parent:Parent  = Relationship(back_populates="students")
     classroom: "Classroom" = Relationship(back_populates="students")
     user: User = Relationship(back_populates="student_profile")
     
@@ -39,10 +40,12 @@ class StudentRead(SQLModel):  # I need to create this model so that I can show p
     age: int | None
     contact: str | None
     address: str | None
-    parent_id: UUID | None
     class_id: UUID | None
-    parent: ParentCreate | None    # this needs to be mentioned specifically
     user: UserForStudent | None
+    FatherName: str | None
+    MotherName: str | None
+    FatherContact: str | None
+    MotherContact: str | None
 
 
 
