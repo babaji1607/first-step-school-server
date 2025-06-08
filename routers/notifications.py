@@ -7,6 +7,11 @@ from Utilities.auth import require_min_role
 
 from models.notifications import Notification, NotificationCreate, NotificationRead, RecipientType
 from database import SessionDep
+import firebase_admin 
+from firebase_admin import credentials, messaging
+
+creds = credentials.Certificate("./firststep-school-firebase-adminsdk-fbsvc-538e257346.json")
+firebase_admin.initialize_app(creds)
 
 router = APIRouter(
     prefix="/notifications", 
@@ -23,6 +28,14 @@ def create_notification(
     session.add(new_notification)
     session.commit()
     session.refresh(new_notification)
+    message = messaging.Message(
+        topic=notification.recipient_type,
+        notification=messaging.Notification(
+            title=notification.title,
+            body=notification.message
+        )
+    )
+    messaging.send(message=message)
     return new_notification
 
 # Teacher-specific endpoints

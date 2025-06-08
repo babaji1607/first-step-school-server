@@ -67,3 +67,9 @@ __pydantic_schema_cache__/
 
 #scripts
 script.py
+
+
+# Firebase service account key
+firststep-school-firebase-adminsdk-fbsvc-538e257346.json
+alembic.ini
+alembic/

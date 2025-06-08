@@ -23,6 +23,7 @@ class StudentCreate(SQLModel):
     MotherName: str | None = Field(default=None)
     FatherContact: str | None = Field(default=None)
     MotherContact: str | None = Field(default=None)
+    notification_token: str | None = Field(default=None)
     class_id: UUID | None = Field(default=None, foreign_key="classrooms.id")
     user_id: UUID | None = Field(default=None, foreign_key="users.id", unique=True)
 
@@ -46,6 +47,7 @@ class StudentRead(SQLModel):  # I need to create this model so that I can show p
     MotherName: str | None
     FatherContact: str | None
     MotherContact: str | None
+    notification_token: str | None
 
 
 

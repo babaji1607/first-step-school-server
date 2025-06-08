@@ -6,8 +6,8 @@ from enum import Enum as PyEnum
 from typing import Optional
 
 class RecipientType(str, PyEnum):
-    TEACHER = "teacher"
-    STUDENT = "student"
+    TEACHER = "teacher" # no need cuz token will be enough to identify teacher
+    STUDENT = "student"  # no need cuz token will be enough to identify student
     TEACHERGLOBAL = "teacher_global"
     STUDENTGLOBAL = "student_global"
     GLOBAL = "global"  # For notifications to all users
@@ -18,8 +18,8 @@ class NotificationBase(SQLModel):
     title: str
     message: str
     recipient_type: RecipientType = Field(default=RecipientType.GLOBAL)
-    # Optional recipient ID (if targeting specific teacher/student)
-    recipient_id: Optional[UUID] = Field(default=None)
+    recipient_token: str | None = Field(default=None)
+
 
 class Notification(NotificationBase, table=True):
     __tablename__ = "notifications"
