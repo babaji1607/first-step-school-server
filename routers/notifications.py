@@ -4,14 +4,39 @@ from sqlmodel import Session, select
 from typing import List, Optional
 from uuid import UUID
 from Utilities.auth import require_min_role
+import os
 
 from models.notifications import Notification, NotificationCreate, NotificationRead, RecipientType
 from database import SessionDep
 import firebase_admin 
 from firebase_admin import credentials, messaging
 
-creds = credentials.Certificate("./firststep-school-firebase-adminsdk-fbsvc-538e257346.json")
-firebase_admin.initialize_app(creds)
+# Initialize Firebase Admin SDK
+def initialize_firebase():
+    if not firebase_admin._apps:  # Check if Firebase is already initialized
+        try:
+            # On Render, secret files are mounted to /etc/secrets/
+            render_secret_path = "/etc/secrets/firststep-school-firebase-adminsdk-fbsvc-538e257346.json"
+            local_dev_path = "./firststep-school-firebase-adminsdk-fbsvc-538e257346.json"
+            
+            # Try Render secret file path first (for production)
+            if os.path.exists(render_secret_path):
+                creds = credentials.Certificate(render_secret_path)
+                print("Using Firebase credentials from Render secret file")
+            elif os.path.exists(local_dev_path):
+                # Fallback to local file (for development)
+                creds = credentials.Certificate(local_dev_path)
+                print("Using Firebase credentials from local file")
+            else:
+                raise FileNotFoundError("Firebase credentials file not found in either location")
+            
+            firebase_admin.initialize_app(creds)
+        except Exception as e:
+            print(f"Failed to initialize Firebase: {e}")
+            raise e
+
+# Initialize Firebase when module is imported
+initialize_firebase()
 
 router = APIRouter(
     prefix="/notifications", 
@@ -28,14 +53,20 @@ def create_notification(
     session.add(new_notification)
     session.commit()
     session.refresh(new_notification)
-    message = messaging.Message(
-        topic=notification.recipient_type,
-        notification=messaging.Notification(
-            title=notification.title,
-            body=notification.message
+    
+    try:
+        message = messaging.Message(
+            topic=notification.recipient_type,
+            notification=messaging.Notification(
+                title=notification.title,
+                body=notification.message
+            )
         )
-    )
-    messaging.send(message=message)
+        messaging.send(message=message)
+    except Exception as e:
+        print(f"Failed to send Firebase notification: {e}")
+        # Don't fail the entire request if notification sending fails
+    
     return new_notification
 
 # Teacher-specific endpoints
