@@ -8,6 +8,11 @@ class UserForStudent(SQLModel):
     id: UUID
     email: str
     
+class ClassForStudent(SQLModel):
+    id: UUID
+    name: str
+    teacher_id: UUID
+    
 
 
 
@@ -48,6 +53,7 @@ class StudentRead(SQLModel):  # I need to create this model so that I can show p
     FatherContact: str | None
     MotherContact: str | None
     notification_token: str | None
+    classroom: ClassForStudent | None
 
 
 
