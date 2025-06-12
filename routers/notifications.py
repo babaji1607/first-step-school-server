@@ -119,7 +119,7 @@ def create_class_notification(
     try:
         # Always send to class topic for this endpoint
         message = messaging.Message(
-            topic=f"class_{class_name}",
+            topic= class_name,
             notification=messaging.Notification(
                 title=notification.title,
                 body=notification.message
