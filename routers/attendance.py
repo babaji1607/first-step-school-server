@@ -9,7 +9,8 @@ from models.attendance import (
     AttendanceSessionRead,
     AttendanceRecord,
     AttendanceRecordRead,
-    AttendanceRecordUpdate
+    AttendanceRecordUpdate,
+    StudentMonthlyAttendanceEntry
 )
 from database import SessionDep
 from Utilities.auth import require_min_role
@@ -17,7 +18,7 @@ from Utilities.auth import require_min_role
 router = APIRouter(
     prefix="/attendance",
     tags=["attendance"],
-    dependencies=[Depends(require_min_role("teacher"))]
+    dependencies=[Depends(require_min_role("student"))]
 )
 
 
@@ -190,3 +191,52 @@ def delete_attendance_record(
     db.commit()
     return
 
+
+
+# cool that works
+@router.get(
+    "/student/{student_id}/calendar/",
+    response_model=List[StudentMonthlyAttendanceEntry],
+    tags=["attendance"]
+)
+def get_student_monthly_attendance_for_calendar(
+    student_id: UUID,
+    db: SessionDep,
+    month: str = Query(..., description="Month in YYYY-MM format")
+):
+    # Parse input month string to date range
+    try:
+        year, month_num = map(int, month.split("-"))
+        from_date = date(year, month_num, 1)
+        if month_num == 12:
+            to_date = date(year + 1, 1, 1)
+        else:
+            to_date = date(year, month_num + 1, 1)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid month format. Use YYYY-MM.")
+
+    # Join AttendanceRecord with AttendanceSession to filter by date
+    query = (
+        select(AttendanceRecord, AttendanceSession)
+        .join(AttendanceSession, AttendanceRecord.session_id == AttendanceSession.id)
+        .where(
+            AttendanceRecord.student_id == student_id,
+            AttendanceSession.date >= from_date,
+            AttendanceSession.date < to_date
+        )
+    )
+
+    results = db.exec(query).all()
+
+    # Transform joined results into desired output structure
+    attendance_list = [
+        StudentMonthlyAttendanceEntry(
+            date=session.date,
+            status=record.status,
+            subject=session.subject,
+            class_name=session.class_name
+        )
+        for record, session in results
+    ]
+
+    return attendance_list

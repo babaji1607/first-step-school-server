@@ -49,3 +49,10 @@ class AttendanceRecordUpdate(SQLModel):
     student_id: UUID
     status: str  # "present", "absent", etc.
     student_name: str | None = None
+    
+    
+class StudentMonthlyAttendanceEntry(SQLModel):
+    date: date
+    status: str
+    subject: str
+    class_name: str
