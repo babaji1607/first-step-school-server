@@ -12,9 +12,8 @@ class EventBase(SQLModel):
     title: str
     description: str
     event_date: datetime
+    imageUrl: str | None = Field(default=None)
     status: EventStatus = Field(default=EventStatus.ACTIVE)
-    recipient_type: Optional[str] = Field(default=None)  # Teacher, Student, or Global
-    recipient_id: Optional[UUID] = Field(default=None)  # Optional target recipient (teacher/student)
 
 class Event(EventBase, table=True):
     __tablename__ = "events"
