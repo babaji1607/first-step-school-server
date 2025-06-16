@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Query
 from sqlmodel import Session, select
 from typing import List, Optional
 from uuid import UUID
@@ -6,7 +6,7 @@ from models.events import Event, EventCreate, EventRead, EventStatus
 from Utilities.auth import require_min_role
 from database import SessionDep
 from Utilities.s3bucketupload import upload_to_s3
-from datetime import datetime
+from datetime import datetime, date
 
 router = APIRouter(
     prefix="/events",
@@ -56,6 +56,30 @@ def get_events(
         query = query.where(Event.recipient_id == user_id)
 
     return session.exec(query).all()
+
+# always place the static routes first before the active routes /active before /{event_id}
+
+@router.get("/active", response_model=List[EventRead])
+def get_active_events(session: SessionDep):
+    query = select(Event).where(Event.status == EventStatus.ACTIVE)
+    return session.exec(query).all()
+
+
+@router.get("/all", response_model=List[EventRead])
+def get_all_events(
+    session: SessionDep,
+    start: Optional[date] = Query(None),
+    end: Optional[date] = Query(None),
+    limit: int = Query(100),  # optional cap
+    page: int = Query(1),
+):
+    query = select(Event)
+    if start and end:
+        query = query.where(Event.event_date >= start, Event.event_date < end)
+
+    query = query.offset((page - 1) * limit).limit(limit)
+    return session.exec(query).all()
+
 
 
 @router.get("/{event_id}", response_model=EventRead)
