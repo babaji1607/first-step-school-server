@@ -10,7 +10,7 @@ from uuid import UUID
 router = APIRouter(
     prefix="/teachers",
     tags=["teachers"],
-    dependencies=[Depends(require_min_role("admin"))],
+    dependencies=[Depends(require_min_role("teacher"))],
 )
 
 
