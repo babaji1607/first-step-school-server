@@ -5,7 +5,7 @@ from uuid import UUID
 from models.events import Event, EventCreate, EventRead, EventStatus
 from Utilities.auth import require_min_role
 from database import SessionDep
-from Utilities.s3bucketupload import upload_to_s3
+from Utilities.s3bucketupload import upload_to_s3, delete_from_s3
 from datetime import datetime, date
 
 router = APIRouter(
@@ -107,11 +107,31 @@ def update_event_status(
     return event
 
 
+# @router.delete("/{event_id}")
+# def delete_event(event_id: UUID, session: SessionDep):
+#     event = session.get(Event, event_id)
+#     if not event:
+#         raise HTTPException(status_code=404, detail="Event not found")
+#     session.delete(event)
+#     session.commit()
+#     return {"ok": True}
+
 @router.delete("/{event_id}")
 def delete_event(event_id: UUID, session: SessionDep):
     event = session.get(Event, event_id)
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
+
+    # Extract filename from URL (if image exists)
+    if event.imageUrl:
+        try:
+            # Handle both plain and presigned URLs
+            filename = event.imageUrl.split("/")[-1].split("?")[0]
+            delete_from_s3(filename)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to delete image from S3: {str(e)}")
+
     session.delete(event)
     session.commit()
     return {"ok": True}
+
