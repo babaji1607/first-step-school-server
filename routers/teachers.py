@@ -37,7 +37,7 @@ def read_students(
 
 
 @router.get("/teacher/{teacher_id}/", response_model=Teacher)
-def read_student(teacher_id: int, session: SessionDep) -> Teacher:
+def read_student(teacher_id: UUID, session: SessionDep) -> Teacher:
     stud = session.get(Teacher, teacher_id)
     if not stud:
         raise HTTPException(status_code=404, detail="Teacher not found")
@@ -62,7 +62,7 @@ def put_teacher(
     session: SessionDep
 ) -> Teacher:
     teacher = session.get(Teacher, teacher_id)
-
+    
     if not teacher:
         raise HTTPException(
             status_code=404,
