@@ -18,6 +18,7 @@ if config.config_file_name is not None:
 
 
 from models import students, notifications, attendance, classroom, events, fee_receipt, teachers, users
+from services.gallary import models
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel

@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from database import create_db_and_tables, get_session, SessionDep
 from routers import students, teachers, fee_recipt, notifications, events, attendance, auth, classroom
+from services.gallary.routes import Gallary_route
 
 app = FastAPI(
     title="Student Attendance API", 
@@ -70,6 +71,7 @@ app.include_router(notifications.router)
 app.include_router(events.router)
 app.include_router(attendance.router)
 app.include_router(fee_recipt.router)
+app.include_router(Gallary_route)
 
 # Add sample data for testing
 @app.on_event("startup")
