@@ -15,7 +15,7 @@ from database import SessionDep
 Gallary_route = APIRouter(
     prefix="/gallery",
     tags=["Gallery"],
-    dependencies=[Depends(require_min_role("admin"))],  # Only admin access
+    dependencies=[Depends(require_min_role("student"))],  # Only admin access
 )
 
 # Helper to convert blank image input to None
