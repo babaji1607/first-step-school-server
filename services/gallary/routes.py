@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Query
 from sqlmodel import select
 from typing import Optional, Union
 from uuid import UUID
@@ -7,6 +7,7 @@ from services.gallary.models import (
     GalleryItemCreate,
     GalleryItemUpdate,
     GalleryItemRead,
+    GalleryPaginationResponse
 )
 from Utilities.auth import require_min_role
 from Utilities.s3bucketupload import upload_to_s3, delete_from_s3
@@ -57,9 +58,21 @@ async def create_gallery_item(
     return new_item
 
 
-@Gallary_route.get("/", response_model=list[GalleryItemRead])
-def get_all_gallery_items(session: SessionDep):
-    return session.exec(select(GalleryItem)).all()
+@Gallary_route.get("/", response_model=GalleryPaginationResponse)
+def get_all_gallery_items(
+    session: SessionDep,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(10, le=100)
+):
+    total = session.exec(select(GalleryItem)).all()
+    paginated = session.exec(select(GalleryItem).offset(offset).limit(limit)).all()
+    return {
+        "total": len(total),
+        "offset": offset,
+        "limit": limit,
+        "items": paginated
+    }
+
 
 
 @Gallary_route.get("/{item_id}", response_model=GalleryItemRead)

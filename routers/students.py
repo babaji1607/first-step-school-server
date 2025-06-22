@@ -1,12 +1,11 @@
-# routers/students.py
 from fastapi import APIRouter, HTTPException, status, Query, Depends
 from models.students import Student, StudentCreate, StudentRead
 from database import SessionDep
 from typing import Annotated, List
 from sqlmodel import select
 from uuid import UUID
+from datetime import date
 from Utilities.auth import require_min_role
-
 
 router = APIRouter(
     prefix="/students",
@@ -14,32 +13,28 @@ router = APIRouter(
     dependencies=[Depends(require_min_role("student"))],
 )
 
-# @router.post("/", status_code=status.HTTP_201_CREATED, response_model=Student)
-# async def create_student(student: Student):
-   
-#     return student
-
 @router.get("/search/", response_model=dict)
 def search_students(
     session: SessionDep,
-    id: int | None = None,
+    id: UUID | None = None,
     name: str | None = None,
     age: int | None = None,
+    roll_number: int | None = None,
+    date_of_birth: date | None = None,
     page: int = 1,
     limit: int = 10,
 ):
     # Prevent search without criteria
-    if id is None and name is None and age is None:
+    if all(param is None for param in [id, name, age, roll_number, date_of_birth]):
         raise HTTPException(
             status_code=400,
-            detail="At least one of 'id', 'name', or 'age' must be provided"
+            detail="At least one of 'id', 'name', 'age', 'roll_number', or 'date_of_birth' must be provided"
         )
 
     if page < 1 or limit < 1:
         raise HTTPException(status_code=400, detail="Page and limit must be positive integers")
 
     offset = (page - 1) * limit
-
     query = select(Student)
 
     if id is not None:
@@ -48,6 +43,10 @@ def search_students(
         query = query.where(Student.name.ilike(f"%{name}%"))
     if age is not None:
         query = query.where(Student.age == age)
+    if roll_number is not None:
+        query = query.where(Student.roll_number == roll_number)
+    if date_of_birth is not None:
+        query = query.where(Student.date_of_birth == date_of_birth)
 
     total_query = session.exec(query).all()
     total_count = len(total_query)
@@ -69,23 +68,20 @@ def search_students(
     }
 
 
-
 @router.post("/create/", status_code=status.HTTP_201_CREATED, response_model=Student)
 def create_student(student_data: StudentCreate, session: SessionDep) -> Student:
-    # Check for existing student with same unique identity details
-    stmt = select(Student).where(
-        Student.name == student_data.name,
-        Student.age == student_data.age,
-        Student.contact == student_data.contact,
-        Student.class_id == student_data.class_id,
-    )
-    existing_student = session.exec(stmt).first()
-
-    if existing_student:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Student with the same details already exists"
+    # Optional: check for existing student by roll_number within class
+    if student_data.roll_number and student_data.class_id:
+        stmt = select(Student).where(
+            Student.roll_number == student_data.roll_number,
+            Student.class_id == student_data.class_id
         )
+        existing = session.exec(stmt).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Student with the same roll number already exists in this class"
+            )
 
     # Create and persist the new student
     new_student = Student.model_validate(student_data)
@@ -93,7 +89,6 @@ def create_student(student_data: StudentCreate, session: SessionDep) -> Student:
     session.commit()
     session.refresh(new_student)
     return new_student
-
 
 
 @router.get("/showall/", response_model=list[StudentRead])
@@ -114,9 +109,8 @@ def read_student(student_id: UUID, session: SessionDep) -> Student:
         raise HTTPException(
             status_code=404,
             detail=f"Student with ID {student_id} not found"
-        ) # here f is a f-string, which is a way to format strings in Python 
+        )
     return stud
-
 
 
 @router.delete("/student/{student_id}")
@@ -129,7 +123,6 @@ def delete_student(student_id: UUID, session: SessionDep):
     return {"ok": True, "deleted_student_id": student_id}
 
 
-# be carefule with trailing slashes in frontend
 @router.put("/student/{student_id}/", response_model=Student)
 def update_student(
     student_id: UUID,
@@ -144,8 +137,7 @@ def update_student(
             detail=f"Student with ID {student_id} not found"
         )
 
-    # Apply full update
-    updated_fields = updated_data.dict()
+    updated_fields = updated_data.dict(exclude_unset=True)
     for field, value in updated_fields.items():
         setattr(student, field, value)
 

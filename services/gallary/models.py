@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID, uuid4
 from datetime import datetime, timezone
 
@@ -25,3 +25,10 @@ class GalleryItemUpdate(GalleryItemBase):
 class GalleryItemRead(GalleryItemBase):
     id: UUID
     date: datetime
+
+
+class GalleryPaginationResponse(SQLModel):
+    total: int
+    offset: int
+    limit: int
+    items: List[GalleryItemRead]
