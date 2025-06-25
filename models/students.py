@@ -16,7 +16,7 @@ class UserForStudent(SQLModel):
 class ClassForStudent(SQLModel):
     id: UUID
     name: str
-    teacher_id: UUID
+    teacher_id: Optional[UUID]
 
 
 class StudentCreate(SQLModel):
