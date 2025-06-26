@@ -240,3 +240,60 @@ def get_student_monthly_attendance_for_calendar(
     ]
 
     return attendance_list
+
+
+
+@router.delete("/session/{session_id}/", status_code=204)
+def delete_attendance_session(session_id: UUID, db: SessionDep):
+    session_obj = db.get(AttendanceSession, session_id)
+    if not session_obj:
+        raise HTTPException(status_code=404, detail="Attendance session not found")
+
+    # Delete associated attendance records
+    db.exec(
+        select(AttendanceRecord)
+        .where(AttendanceRecord.session_id == session_id)
+    ).all()
+    records_to_delete = db.exec(
+        select(AttendanceRecord).where(AttendanceRecord.session_id == session_id)
+    ).all()
+
+    for record in records_to_delete:
+        db.delete(record)
+
+    # Delete the session itself
+    db.delete(session_obj)
+    db.commit()
+
+
+@router.put("/session/{session_id}/", response_model=AttendanceSessionRead)
+def update_attendance_session_records(
+    session_id: UUID,
+    updated_data: AttendanceSessionCreate,  # full attendance session with records
+    db: SessionDep
+):
+    # Fetch existing session (we won't modify its metadata)
+    session_obj = db.get(AttendanceSession, session_id)
+    if not session_obj:
+        raise HTTPException(status_code=404, detail="Attendance session not found")
+
+    # Delete all previous records for this session
+    existing_records = db.exec(
+        select(AttendanceRecord).where(AttendanceRecord.session_id == session_id)
+    ).all()
+    for record in existing_records:
+        db.delete(record)
+
+    # Add all new records from the request
+    for record in updated_data.records:
+        new_record = AttendanceRecord(
+            session_id=session_id,
+            student_id=record.student_id,
+            status=record.status,
+            student_name=record.student_name
+        )
+        db.add(new_record)
+
+    db.commit()
+    db.refresh(session_obj)
+    return session_obj
