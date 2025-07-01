@@ -6,6 +6,7 @@ from sqlmodel import select
 from uuid import UUID
 from datetime import date
 from Utilities.auth import require_min_role
+from sqlalchemy import cast, String
 
 router = APIRouter(
     prefix="/students",
@@ -146,3 +147,39 @@ def update_student(
     session.refresh(student)
 
     return student
+
+
+@router.get("/search/by-term/", response_model=List[StudentRead])
+def search_students_by_term(
+    query: Annotated[str, Query(min_length=1)],
+    session: SessionDep
+) -> List[Student]:
+    """
+    Search students by a single term matching name, FatherName, MotherName, or roll_number (as string).
+    Returns up to 10 results.
+    """
+    stmt = (
+        select(Student)
+        .where(
+            (
+                Student.name.ilike(f"%{query}%")
+            ) | (
+                Student.FatherName.ilike(f"%{query}%")
+            ) | (
+                Student.MotherName.ilike(f"%{query}%")
+            ) | (
+                cast(Student.roll_number, String).ilike(f"%{query}%")
+            )
+        )
+        .limit(10)
+    )
+
+    results = session.exec(stmt).all()
+
+    if not results:
+        raise HTTPException(
+            status_code=404,
+            detail="No students found matching the query."
+        )
+
+    return results
