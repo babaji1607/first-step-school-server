@@ -10,7 +10,7 @@ from services.diary.models import DiaryItem, DiaryCreate, DiaryUpdate, DiaryRead
 Diary_router = APIRouter(
     prefix="/diary",
     tags=["Diary"],
-    dependencies=[Depends(require_min_role("student"))],
+    dependencies=[Depends(require_min_role("student"))],  # ✅ Read access for students
 )
 
 def normalize_upload_file(file: Union[UploadFile, str, None]) -> Optional[UploadFile]:
@@ -18,11 +18,12 @@ def normalize_upload_file(file: Union[UploadFile, str, None]) -> Optional[Upload
         return None
     return file
 
-@Diary_router.post("/", response_model=DiaryRead)
+@Diary_router.post("/", response_model=DiaryRead, dependencies=[Depends(require_min_role("teacher"))])
 async def create_diary_item(
     session: SessionDep,
     title: str = Form(...),
     classname: str = Form(...),
+    teacher_name: str = Form(...),  # ✅ New field
     description: Optional[str] = Form(None),
     raw_file: Union[UploadFile, str, None] = File(None),
 ):
@@ -38,6 +39,7 @@ async def create_diary_item(
     diary_data = DiaryCreate(
         title=title,
         classname=classname,
+        teacher_name=teacher_name,
         description=description,
         file_url=file_url,
     )
@@ -57,7 +59,7 @@ def get_all_diary_items(
     total_items = session.exec(select(DiaryItem)).all()
     paginated_items = session.exec(
         select(DiaryItem)
-        .order_by(DiaryItem.creation_date.desc())  # ✅ Ensure newest first globally
+        .order_by(DiaryItem.creation_date.desc())
         .offset(offset)
         .limit(limit)
     ).all()
@@ -82,7 +84,7 @@ def get_diary_by_classname(
     paginated_items = session.exec(
         select(DiaryItem)
         .where(DiaryItem.classname == classname)
-        .order_by(DiaryItem.creation_date.desc())  # ✅ Use datetime sorting
+        .order_by(DiaryItem.creation_date.desc())
         .offset(offset)
         .limit(limit)
     ).all()
@@ -94,6 +96,32 @@ def get_diary_by_classname(
         items=paginated_items
     )
 
+@Diary_router.get("/by-teacher", response_model=DiaryPaginationResponse)
+def get_diary_by_teacher(
+    session: SessionDep,
+    teacher_name: str = Query(..., min_length=1),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(10, le=100),
+):
+    total_items = session.exec(
+        select(DiaryItem).where(DiaryItem.teacher_name == teacher_name)
+    ).all()
+
+    paginated_items = session.exec(
+        select(DiaryItem)
+        .where(DiaryItem.teacher_name == teacher_name)
+        .order_by(DiaryItem.creation_date.desc())
+        .offset(offset)
+        .limit(limit)
+    ).all()
+
+    return DiaryPaginationResponse(
+        total=len(total_items),
+        offset=offset,
+        limit=limit,
+        items=paginated_items,
+    )
+
 @Diary_router.get("/{item_id}", response_model=DiaryRead)
 def get_diary_item(item_id: UUID, session: SessionDep):
     item = session.get(DiaryItem, item_id)
@@ -101,11 +129,11 @@ def get_diary_item(item_id: UUID, session: SessionDep):
         raise HTTPException(status_code=404, detail="Diary entry not found")
     return item
 
-@Diary_router.put("/{item_id}", response_model=DiaryRead)
+@Diary_router.put("/{item_id}", response_model=DiaryRead, dependencies=[Depends(require_min_role("teacher"))])
 def replace_diary_item_json(
-    session: SessionDep, 
+    session: SessionDep,
     item_id: UUID,
-    updated_data: DiaryCreate = Body(...)
+    updated_data: DiaryCreate = Body(...),
 ):
     db_item = session.get(DiaryItem, item_id)
     if not db_item:
@@ -114,6 +142,7 @@ def replace_diary_item_json(
     db_item.title = updated_data.title
     db_item.description = updated_data.description
     db_item.classname = updated_data.classname
+    db_item.teacher_name = updated_data.teacher_name  # ✅ Update teacher name
     db_item.file_url = updated_data.file_url
 
     session.add(db_item)
@@ -121,7 +150,7 @@ def replace_diary_item_json(
     session.refresh(db_item)
     return db_item
 
-@Diary_router.delete("/{item_id}")
+@Diary_router.delete("/{item_id}", dependencies=[Depends(require_min_role("teacher"))])
 def delete_diary_item(item_id: UUID, session: SessionDep):
     item = session.get(DiaryItem, item_id)
     if not item:
