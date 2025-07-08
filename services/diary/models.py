@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field
 from uuid import UUID, uuid4
-from datetime import date, datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 
 class DiaryBase(SQLModel):
@@ -11,7 +11,7 @@ class DiaryBase(SQLModel):
 
 class DiaryItem(DiaryBase, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    creation_date: date = Field(default_factory=date.today)
+    creation_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))  # ✅ Aware datetime
 
 class DiaryCreate(DiaryBase):
     pass
@@ -24,7 +24,7 @@ class DiaryUpdate(SQLModel):
 
 class DiaryRead(DiaryBase):
     id: UUID
-    creation_date: date
+    creation_date: datetime  # ✅ Use datetime
 
 class DiaryPaginationResponse(SQLModel):
     total: int

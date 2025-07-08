@@ -1,9 +1,8 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, Query, Body
-from typing import Optional, Union, List
+from typing import Optional, Union
 from uuid import UUID
 from sqlmodel import select
 from database import SessionDep
-from datetime import date
 from Utilities.auth import require_min_role
 from Utilities.s3bucketupload import upload_to_s3, delete_from_s3
 from services.diary.models import DiaryItem, DiaryCreate, DiaryUpdate, DiaryRead, DiaryPaginationResponse
@@ -11,7 +10,7 @@ from services.diary.models import DiaryItem, DiaryCreate, DiaryUpdate, DiaryRead
 Diary_router = APIRouter(
     prefix="/diary",
     tags=["Diary"],
-    dependencies=[Depends(require_min_role("student"))],  # Only students (minimum role) can access
+    dependencies=[Depends(require_min_role("student"))],
 )
 
 def normalize_upload_file(file: Union[UploadFile, str, None]) -> Optional[UploadFile]:
@@ -56,7 +55,12 @@ def get_all_diary_items(
     limit: int = Query(10, le=100)
 ):
     total_items = session.exec(select(DiaryItem)).all()
-    paginated_items = session.exec(select(DiaryItem).offset(offset).limit(limit)).all()
+    paginated_items = session.exec(
+        select(DiaryItem)
+        .order_by(DiaryItem.creation_date.desc())  # ✅ Ensure newest first globally
+        .offset(offset)
+        .limit(limit)
+    ).all()
     return {
         "total": len(total_items),
         "offset": offset,
@@ -64,7 +68,6 @@ def get_all_diary_items(
         "items": paginated_items
     }
 
-# ✅ Put this before any path parameters like /{item_id}
 @Diary_router.get("/by-class", response_model=DiaryPaginationResponse)
 def get_diary_by_classname(
     session: SessionDep,
@@ -79,7 +82,7 @@ def get_diary_by_classname(
     paginated_items = session.exec(
         select(DiaryItem)
         .where(DiaryItem.classname == classname)
-        .order_by(DiaryItem.creation_date.desc())
+        .order_by(DiaryItem.creation_date.desc())  # ✅ Use datetime sorting
         .offset(offset)
         .limit(limit)
     ).all()
