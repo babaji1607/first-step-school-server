@@ -11,7 +11,7 @@ from services.diary.models import DiaryItem, DiaryCreate, DiaryUpdate, DiaryRead
 Diary_router = APIRouter(
     prefix="/diary",
     tags=["Diary"],
-    dependencies=[Depends(require_min_role("student"))],  # Only teachers can post diary entries
+    dependencies=[Depends(require_min_role("student"))],  # Only students (minimum role) can access
 )
 
 def normalize_upload_file(file: Union[UploadFile, str, None]) -> Optional[UploadFile]:
@@ -64,6 +64,33 @@ def get_all_diary_items(
         "items": paginated_items
     }
 
+# ✅ Put this before any path parameters like /{item_id}
+@Diary_router.get("/by-class", response_model=DiaryPaginationResponse)
+def get_diary_by_classname(
+    session: SessionDep,
+    classname: str = Query(..., min_length=1),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(10, le=100),
+):
+    total_items = session.exec(
+        select(DiaryItem).where(DiaryItem.classname == classname)
+    ).all()
+
+    paginated_items = session.exec(
+        select(DiaryItem)
+        .where(DiaryItem.classname == classname)
+        .order_by(DiaryItem.creation_date.desc())
+        .offset(offset)
+        .limit(limit)
+    ).all()
+
+    return DiaryPaginationResponse(
+        total=len(total_items),
+        offset=offset,
+        limit=limit,
+        items=paginated_items
+    )
+
 @Diary_router.get("/{item_id}", response_model=DiaryRead)
 def get_diary_item(item_id: UUID, session: SessionDep):
     item = session.get(DiaryItem, item_id)
@@ -107,30 +134,3 @@ def delete_diary_item(item_id: UUID, session: SessionDep):
     session.delete(item)
     session.commit()
     return {"ok": True}
-
-
-@Diary_router.get("/by-class", response_model=DiaryPaginationResponse)
-def get_diary_by_classname(
-    session: SessionDep,
-    classname: str = Query(..., min_length=1),
-    offset: int = Query(0, ge=0),
-    limit: int = Query(10, le=100),
-):
-    total_items = session.exec(
-        select(DiaryItem).where(DiaryItem.classname == classname)
-    ).all()
-
-    paginated_items = session.exec(
-        select(DiaryItem)
-        .where(DiaryItem.classname == classname)
-        .order_by(DiaryItem.creation_date.desc())
-        .offset(offset)
-        .limit(limit)
-    ).all()
-
-    return DiaryPaginationResponse(
-        total=len(total_items),
-        offset=offset,
-        limit=limit,
-        items=paginated_items
-    )
