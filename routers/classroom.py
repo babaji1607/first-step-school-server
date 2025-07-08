@@ -32,6 +32,10 @@ def create_classroom(classroom: ClassroomCreate, session: SessionDep) -> Classro
     session.refresh(new_classroom)
     return new_classroom
 
+@router.get("/names", response_model=List[str])
+def get_all_class_names(session: SessionDep) -> List[str]:
+    result = session.exec(select(Classroom.name)).all()
+    return result
 
 @router.get("/showall", response_model=List[ClassroomRead])
 def read_classrooms(
