@@ -20,7 +20,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"], # beware of this you have to chagne this in production or use env for this one
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,6 +63,10 @@ async def get_api_info(request: Request):
         "documentation": f"{base_url}docs",
         "endpoints": get_all_endpoints()
     }
+
+@app.patch("/health")
+def patch_test():
+    return {"message": "server is running"}
 
 # Include all routers
 app.include_router(auth.router)

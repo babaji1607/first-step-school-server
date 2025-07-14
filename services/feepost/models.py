@@ -35,3 +35,12 @@ class FeePostPaginationResponse(SQLModel):
     offset: int
     limit: int
     items: List[FeePostRead]
+
+
+class FeeMode(str, Enum):
+    online = "online"
+    offline = "offline"
+
+class FeePostUpdateStatus(SQLModel):
+    mode: FeeMode
+    is_paid: bool

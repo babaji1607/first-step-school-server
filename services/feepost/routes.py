@@ -4,13 +4,16 @@ from uuid import UUID
 from typing import List
 from database import SessionDep
 from Utilities.auth import require_min_role
-from services.feepost.models import FeePost, FeePostCreate, FeePostRead, FeePostPaginationResponse
+from services.feepost.models import FeePost, FeePostCreate, FeePostRead, FeePostPaginationResponse, FeePostUpdateStatus
+# from routers.fee_recipt import create_fee_receipt
 
 fee_router = APIRouter(
     prefix="/feepost",
     tags=["FeePost"],
     dependencies=[Depends(require_min_role("student"))]
 )
+
+
 
 @fee_router.post("/", response_model=FeePostRead, dependencies=[Depends(require_min_role("admin"))])
 def create_fee_post(session: SessionDep, payload: FeePostCreate):
@@ -70,3 +73,23 @@ def get_fee_posts_by_student(
         limit=limit,
         items=paginated_items
     )
+
+
+
+@fee_router.patch("/{fee_id}/status", response_model=FeePostRead, dependencies=[Depends(require_min_role("admin"))])
+def update_fee_post_status(
+    fee_id: UUID,
+    payload: FeePostUpdateStatus,
+    session: SessionDep
+):
+    fee_post = session.get(FeePost, fee_id)
+    if not fee_post:
+        raise HTTPException(status_code=404, detail="Fee post not found")
+
+    fee_post.mode = payload.mode
+    fee_post.is_paid = payload.is_paid
+
+    session.add(fee_post)
+    session.commit()
+    session.refresh(fee_post)
+    return fee_post
