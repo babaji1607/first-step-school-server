@@ -10,7 +10,7 @@ from services.feepost.models import FeePost, FeePostCreate, FeePostRead, FeePost
 fee_router = APIRouter(
     prefix="/feepost",
     tags=["FeePost"],
-    dependencies=[Depends(require_min_role("admin"))]
+    dependencies=[Depends(require_min_role("student"))]
 )
 
 
@@ -48,7 +48,7 @@ def get_all_fee_posts(session: SessionDep, offset: int = Query(0, ge=0), limit: 
         "items": paginated_items,
     }
 
-@fee_router.get("/by-student", response_model=FeePostPaginationResponse, dependencies=[Depends(require_min_role("student"))])
+@fee_router.get("/by-student", response_model=FeePostPaginationResponse)
 def get_fee_posts_by_student(
     session: SessionDep,
     student_id: UUID = Query(...),
