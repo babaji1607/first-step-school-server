@@ -76,7 +76,7 @@ def get_fee_posts_by_student(
 
 
 
-@fee_router.patch("/{fee_id}/status", response_model=FeePostRead, dependencies=[Depends(require_min_role("admin"))])
+@fee_router.patch("/{fee_id}/status", response_model=FeePostRead, dependencies=[Depends(require_min_role("student"))])
 def update_fee_post_status(
     fee_id: UUID,
     payload: FeePostUpdateStatus,
