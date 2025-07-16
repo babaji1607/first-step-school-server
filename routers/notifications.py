@@ -80,7 +80,7 @@ def create_notification(
             
             # If it's a class name (not predefined enum), use class_ prefix for Firebase topic
             if is_class_name(notification.recipient_type):
-                topic = f"class_{notification.recipient_type}"
+                topic = f"{notification.recipient_type}"
             
             message = messaging.Message(
                 topic=topic,
