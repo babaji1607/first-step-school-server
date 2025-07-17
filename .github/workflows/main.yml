@@ -27,9 +27,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Decode Firebase credentials from secret
+      - name: Create Firebase credentials file
         run: |
-          echo "${{ secrets.FIREBASE_CREDENTIALS_JSON }}" > firststep-school-firebase-adminsdk-fbsvc-538e257346.json
+          printf "%s" "${{ secrets.FIREBASE_CREDENTIALS_JSON }}" > firststep-school-firebase-adminsdk-fbsvc-538e257346.json
 
       - name: Run tests with pytest
         run: |
